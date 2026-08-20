@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/generated/prisma
+
+# Anvesha local/generated files
+/anvesha.db
+/prisma/*.db
+/prisma/*.db-journal
+/uploads/
+/*.zip
+/...
+/*.tsbuildinfo
+
+# Prisma local database backups
+/prisma/*.backup
+/prisma/*.backup-*

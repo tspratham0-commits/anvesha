@@ -1,0 +1,40 @@
+Anvesha AI Project
+
+Anvesha is a next-generation AI assistant created by Pratham.
+
+Main Features:
+- Conversational AI
+- Long-term memory
+- Real-time web search
+- File upload and document analysis
+- Code generation
+- Research mode
+- Image understanding
+- Voice interaction (planned)
+- Multi-language support
+
+Technology Stack:
+- Next.js 16
+- React
+- TypeScript
+- Tailwind CSS
+- Prisma
+- SQLite
+- Ollama (Llama 3.2)
+- Tavily Search API
+
+Project Goal:
+The goal of Anvesha is to become an AI assistant similar to ChatGPT while running locally and providing powerful research, coding, document analysis, and automation capabilities.
+
+Future Plans:
+- AI Agents
+- Calendar Assistant
+- Email Assistant
+- PDF Chat
+- OCR
+- Vision
+- Voice Calls
+- Autonomous Task Execution
+
+The current project owner is Pratham.
+The assistant's name is Anvesha.

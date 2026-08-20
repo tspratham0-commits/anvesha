@@ -1,0 +1,518 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./anvesha.db"
+}
+
+//////////////////////////////////////////////////////
+// PROJECT
+//////////////////////////////////////////////////////
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+
+  reports      Report[]
+  notes        Note[]
+  tasks        Task[]
+  memories     Memory[]
+  researchJobs ResearchJob[]
+}
+
+//////////////////////////////////////////////////////
+// TASK
+//////////////////////////////////////////////////////
+
+model Task {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String @default("")
+  status      String @default("TODO")
+  priority    String @default("MEDIUM")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+//////////////////////////////////////////////////////
+// REPORT
+//////////////////////////////////////////////////////
+
+model Report {
+  id            Int    @id @default(autoincrement())
+  title         String
+  summary       String
+  problem       String
+  solution      String
+  market        String
+  advantage     String
+  businessModel String
+  revenue       String
+
+  score Int
+
+  customers   String
+  competitors String
+  marketing   String
+  risks       String
+  techStack   String
+  mvp         String
+  sources     String
+
+  projectId Int?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+//////////////////////////////////////////////////////
+// NOTE
+//////////////////////////////////////////////////////
+
+model Note {
+  id Int @id @default(autoincrement())
+
+  title   String
+  content String
+
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+//////////////////////////////////////////////////////
+// MEMORY
+//////////////////////////////////////////////////////
+
+model Memory {
+  id Int @id @default(autoincrement())
+
+  content String
+
+  projectId Int?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+//////////////////////////////////////////////////////
+// CHAT
+//////////////////////////////////////////////////////
+
+model Chat {
+  id Int @id @default(autoincrement())
+
+  title String
+
+  createdAt DateTime @default(now())
+
+  messages Message[]
+}
+
+//////////////////////////////////////////////////////
+// MESSAGE
+//////////////////////////////////////////////////////
+
+model Message {
+  id Int @id @default(autoincrement())
+
+  role    String
+  content String
+
+  createdAt DateTime @default(now())
+
+  chatId Int
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH JOB
+//////////////////////////////////////////////////////
+
+model ResearchJob {
+  id Int @id @default(autoincrement())
+
+  title        String
+  topic        String
+  instructions String  @default("")
+  status       String  @default("PENDING")
+  schedule     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  runs ResearchRun[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH RUN
+//////////////////////////////////////////////////////
+
+model ResearchRun {
+  id Int @id @default(autoincrement())
+
+  status      String    @default("PENDING")
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  summary String @default("")
+  report  String @default("")
+  error   String @default("")
+
+  researchJobId Int
+  researchJob   ResearchJob @relation(fields: [researchJobId], references: [id], onDelete: Cascade)
+
+  findings              ResearchFinding[]
+  clusters              ResearchCluster[]
+  graphNodes            ResearchGraphNode[]
+  competitorSnapshots   CompetitorSnapshot[]
+  trends                ResearchTrend[]
+  interviews            CustomerInterview[]
+  validationExperiments ValidationExperiment[]
+  marketGaps            MarketGap[]
+  opportunities         Opportunity[]
+  rootCauses            RootCause[]
+
+  createdAt DateTime @default(now())
+
+  @@index([researchJobId])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH FINDING
+//////////////////////////////////////////////////////
+
+model ResearchFinding {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+
+  evidence   String @default("")
+  sourceUrl  String @default("")
+  sourceName String @default("")
+
+  opportunityScore Int @default(0)
+
+  frequency        Int @default(50)
+  severity         Int @default(50)
+  economicImpact   Int @default(50)
+  evidenceStrength Int @default(50)
+  paymentPotential Int @default(50)
+
+  confidence Int @default(50)
+
+  rootCause       String @default("")
+  consequence     String @default("")
+  affectedUsers   String @default("")
+  currentSolution String @default("")
+  opportunity     String @default("")
+
+  trend String @default("NEW")
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  clusters   ResearchClusterFinding[]
+  graphNodes ResearchGraphNode[]
+
+  @@index([researchRunId])
+  @@index([opportunityScore])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH CLUSTER
+//////////////////////////////////////////////////////
+
+model ResearchCluster {
+  id Int @id @default(autoincrement())
+
+  name    String
+  summary String
+  score   Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  findings ResearchClusterFinding[]
+
+  @@index([researchRunId])
+  @@index([score])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH CLUSTER ↔ FINDING
+//////////////////////////////////////////////////////
+
+model ResearchClusterFinding {
+  id Int @id @default(autoincrement())
+
+  clusterId Int
+  findingId Int
+
+  cluster ResearchCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  finding ResearchFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  @@unique([clusterId, findingId])
+  @@index([findingId])
+}
+
+//////////////////////////////////////////////////////
+// ROOT CAUSE TREE
+//////////////////////////////////////////////////////
+
+model RootCause {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+  severity    Int    @default(50)
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  parentId Int?
+  parent   RootCause?  @relation("CauseTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children RootCause[] @relation("CauseTree")
+
+  @@index([researchRunId])
+  @@index([parentId])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH GRAPH NODE
+//////////////////////////////////////////////////////
+
+model ResearchGraphNode {
+  id Int @id @default(autoincrement())
+
+  label String
+  type  String
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  findingId Int?
+  finding   ResearchFinding? @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  outgoing ResearchGraphEdge[] @relation("FromNode")
+  incoming ResearchGraphEdge[] @relation("ToNode")
+
+  @@index([researchRunId])
+  @@index([findingId])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH GRAPH EDGE
+//////////////////////////////////////////////////////
+
+model ResearchGraphEdge {
+  id Int @id @default(autoincrement())
+
+  relation String
+  weight   Float  @default(1)
+
+  fromNodeId Int
+  toNodeId   Int
+
+  fromNode ResearchGraphNode @relation("FromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   ResearchGraphNode @relation("ToNode", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromNodeId, toNodeId, relation])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+//////////////////////////////////////////////////////
+// COMPETITOR SNAPSHOT
+//////////////////////////////////////////////////////
+
+model CompetitorSnapshot {
+  id Int @id @default(autoincrement())
+
+  competitor   String
+  website      String @default("")
+  description  String @default("")
+  strengths    String @default("")
+  weaknesses   String @default("")
+  pricing      String @default("")
+  positioning  String @default("")
+  targetMarket String @default("")
+
+  opportunityGap String @default("")
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+}
+
+//////////////////////////////////////////////////////
+// RESEARCH TREND
+//////////////////////////////////////////////////////
+
+model ResearchTrend {
+  id Int @id @default(autoincrement())
+
+  keyword    String
+  direction  String
+  confidence Int    @default(50)
+
+  description String @default("")
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+}
+
+//////////////////////////////////////////////////////
+// CUSTOMER INTERVIEW
+//////////////////////////////////////////////////////
+
+model CustomerInterview {
+  id Int @id @default(autoincrement())
+
+  customerType     String
+  interviewee      String @default("")
+  painPoint        String
+  currentSolution  String @default("")
+  willingnessToPay String @default("")
+  notes            String @default("")
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+}
+
+//////////////////////////////////////////////////////
+// VALIDATION EXPERIMENT
+//////////////////////////////////////////////////////
+
+model ValidationExperiment {
+  id Int @id @default(autoincrement())
+
+  title          String
+  hypothesis     String
+  experimentType String
+
+  successMetric String
+  result        String @default("")
+  status        String @default("PLANNED")
+
+  confidence Int @default(50)
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////
+// MARKET GAP
+//////////////////////////////////////////////////////
+
+model MarketGap {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+
+  severity         Int @default(50)
+  opportunityScore Int @default(50)
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+  @@index([opportunityScore])
+}
+
+//////////////////////////////////////////////////////
+// OPPORTUNITY
+//////////////////////////////////////////////////////
+
+model Opportunity {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String
+
+  customerSegment String @default("")
+  businessModel   String @default("")
+
+  confidence Int @default(50)
+  score      Int @default(50)
+
+  createdAt DateTime @default(now())
+
+  researchRunId Int
+  researchRun   ResearchRun @relation(fields: [researchRunId], references: [id], onDelete: Cascade)
+
+  @@index([researchRunId])
+  @@index([score])
+}
+
+//////////////////////////////////////////////////////
+// EVIDENCE CACHE
+//////////////////////////////////////////////////////
+
+model EvidenceCache {
+  id Int @id @default(autoincrement())
+
+  url      String @unique
+  title    String
+  content  String
+  checksum String
+
+  createdAt DateTime @default(now())
+}

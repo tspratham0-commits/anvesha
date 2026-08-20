@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+**/.next/
+out/
+**/out/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Local uploads / generated data
+uploads/
+**/uploads/
+
+# Archives / local backups
+*.zip
+*.tar
+*.tar.gz
+
+# Build / generated files
+*.tsbuildinfo
+coverage/
+dist/
+build/
+
+# OS files
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vercel
+.vercel/
+
+# Certificates / keys
+*.pem
+
+# Local scratch file accidentally created in project
+web/...
