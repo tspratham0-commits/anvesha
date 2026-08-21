@@ -18,6 +18,124 @@ function toArray(value: unknown): string[] {
   return [];
 }
 
+function normalizeEvidenceText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[“”"']/g, "")
+    .trim();
+}
+
+function evidenceExistsInSource(
+  evidence: string,
+  sourceContent: string
+): boolean {
+  const cleanEvidence =
+    normalizeEvidenceText(evidence);
+
+  const cleanSource =
+    normalizeEvidenceText(sourceContent);
+
+  if (
+    !cleanEvidence ||
+    !cleanSource
+  ) {
+    return false;
+  }
+
+  return cleanSource.includes(
+    cleanEvidence
+  );
+}
+
+function evidenceStronglyMatchesSource(
+  evidence: string,
+  sourceContent: string
+): boolean {
+  const words = Array.from(
+    new Set(
+      normalizeEvidenceText(evidence)
+        .split(/[^a-z0-9]+/)
+        .filter(
+          (word) => word.length >= 5
+        )
+    )
+  );
+
+  if (words.length < 4) {
+    return false;
+  }
+
+  const source =
+    normalizeEvidenceText(
+      sourceContent
+    );
+
+  const matched = words.filter(
+    (word) =>
+      source.includes(word)
+  ).length;
+
+  return (
+    matched / words.length >= 0.8
+  );
+}
+
+function verifyProblemEvidence(
+  evidence: unknown,
+  sourceIndex: unknown,
+  sources: Array<{
+    title: string;
+    url: string;
+    content: string;
+  }>
+) {
+  const text =
+    String(evidence ?? "").trim();
+
+  const index =
+    Number(sourceIndex);
+
+  if (
+    !text ||
+    !Number.isInteger(index) ||
+    index < 1 ||
+    index > sources.length
+  ) {
+    return null;
+  }
+
+  const source =
+    sources[index - 1];
+
+  if (!source) {
+    return null;
+  }
+
+  const exact =
+    evidenceExistsInSource(
+      text,
+      source.content
+    );
+
+  const strong =
+    evidenceStronglyMatchesSource(
+      text,
+      source.content
+    );
+
+  if (!exact && !strong) {
+    return null;
+  }
+
+  return {
+    text,
+    sourceIndex: index,
+    sourceTitle: source.title,
+    sourceUrl: source.url,
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
@@ -100,6 +218,8 @@ Required JSON structure:
   "title": "",
   "summary": "",
   "problem": "",
+  "problemEvidence": "",
+  "problemEvidenceSourceIndex": 0,
   "solution": "",
   "customers": [],
   "market": "",
@@ -126,7 +246,29 @@ summary:
 Write a 3-5 sentence executive summary.
 
 problem:
-Describe a real customer problem.
+Describe a real customer problem supported by the supplied web research.
+
+problemEvidence:
+Copy a concise factual passage from the supplied web research that directly
+supports why the problem exists.
+
+The evidence MUST come from the supplied sources.
+
+Do NOT use:
+- product descriptions
+- company advertisements
+- company marketing claims
+- descriptions of solutions
+- descriptions of software or services
+
+as evidence of the underlying problem.
+
+If the supplied sources do not contain meaningful evidence for the problem,
+return an empty string.
+
+problemEvidenceSourceIndex:
+Return the 1-based SOURCE number containing the evidence.
+Return 0 if no valid evidence exists.
 
 solution:
 Explain how the proposed startup solves the problem.
@@ -316,7 +458,38 @@ ${webContext}
     report.score ??= 75;
 
     // ========================================
-    // 7. ADD TAVILY RESEARCH SOURCES
+    // 7. VERIFY PROBLEM EVIDENCE
+    // ========================================
+
+    const verifiedEvidence =
+      verifyProblemEvidence(
+        report.problemEvidence,
+        report.problemEvidenceSourceIndex,
+        research.results.map((item) => ({
+          title: item.title,
+          url: item.url,
+          content: item.content,
+        }))
+      );
+
+    if (verifiedEvidence) {
+      report.problemEvidence =
+        verifiedEvidence.text;
+
+      report.problemEvidenceSourceIndex =
+        verifiedEvidence.sourceIndex;
+
+      report.evidenceVerified = true;
+    } else {
+      report.problemEvidence = "";
+
+      report.problemEvidenceSourceIndex = 0;
+
+      report.evidenceVerified = false;
+    }
+
+    // ========================================
+    // 8. ADD TAVILY RESEARCH SOURCES
     // ========================================
 
     report.sources = research.results.map(
@@ -327,7 +500,7 @@ ${webContext}
     );
 
     // ========================================
-    // 8. RETURN COMPLETE REPORT
+    // 9. RETURN COMPLETE REPORT
     // ========================================
 
     return NextResponse.json(report);

@@ -12,6 +12,9 @@ type Report = {
   title: string;
   summary: string;
   problem: string;
+  problemEvidence: string;
+  problemEvidenceSourceIndex: number;
+  evidenceVerified: boolean;
   solution: string;
   customers: string[];
   market: string;
@@ -318,6 +321,36 @@ export default function DiscoverPage() {
                 title="🔥 Problem"
                 content={report.problem}
               />
+
+              <div className="rounded-xl border border-neutral-700 bg-neutral-950 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                    🔎 Problem Evidence
+                  </div>
+
+                  {report.evidenceVerified ? (
+                    <span className="rounded-full border border-green-800 bg-green-950 px-3 py-1 text-xs font-semibold text-green-400">
+                      ✓ Verified
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-yellow-800 bg-yellow-950 px-3 py-1 text-xs font-semibold text-yellow-400">
+                      ⚠ Not verified
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-neutral-300">
+                  {report.problemEvidence
+                    ? report.problemEvidence
+                    : "No problem evidence could be verified from the supplied research sources."}
+                </p>
+
+                {report.problemEvidenceSourceIndex > 0 && (
+                  <p className="mt-3 text-xs text-neutral-500">
+                    Verified against research source #{report.problemEvidenceSourceIndex}.
+                  </p>
+                )}
+              </div>
 
               <Section
                 title="💡 Solution"
