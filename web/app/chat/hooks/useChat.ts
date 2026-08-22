@@ -237,13 +237,6 @@ export function useChat() {
       }
     }
 
-    if (assistantReply.trim()) {
-      await saveMessage(
-        currentChatId,
-        "assistant",
-        assistantReply
-      );
-    }
   }
 
   async function sendMessage() {
